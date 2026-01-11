@@ -1,0 +1,30 @@
+{
+  "name": "playwriter-nat-relay",
+  "version": "1.0.0",
+  "description": "P2P relay for playwriter MCP using hyperswarm, with isolated page sessions per client",
+  "main": "lib/relay.js",
+  "bin": {
+    "playwriter-nat-relay": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node bin/cli.js serve"
+  },
+  "keywords": [
+    "playwriter",
+    "mcp",
+    "relay",
+    "hyperswarm",
+    "p2p",
+    "browser-automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@hyperswarm/dht": "^6.5.1",
+    "pump": "^3.0.3",
+    "yargs": "^17.7.2"
+  }
+}
