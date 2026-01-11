@@ -1,4 +1,4 @@
-# playwriter-nat-relay
+# playwriter-nat
 
 P2P relay for [playwriter](https://github.com/remorses/playwriter) using hyperswarm for NAT traversal. Multiple clients connect to a single shared playwriter serve instance with isolated pages per client.
 

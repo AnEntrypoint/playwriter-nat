@@ -1,8 +1,8 @@
-# CLAUDE.md - playwriter-nat-relay Implementation Guide
+# CLAUDE.md - playwriter-nat Implementation Guide
 
 ## Project Overview
 
-**playwriter-nat-relay** is a P2P relay server for [Playwriter MCP](https://github.com/remorses/playwriter) using [Hyperswarm DHT](https://github.com/hyperswarm/hyperswarm) for NAT traversal. It enables multiple isolated playwriter MCP clients to connect to a single relay server over peer-to-peer networks without requiring direct IP access or port forwarding.
+**playwriter-nat** is a P2P relay server for [Playwriter MCP](https://github.com/remorses/playwriter) using [Hyperswarm DHT](https://github.com/hyperswarm/hyperswarm) for NAT traversal. It enables multiple isolated playwriter MCP clients to connect to a single relay server over peer-to-peer networks without requiring direct IP access or port forwarding.
 
 **Key Architecture Decision**: All clients connect to a **single shared `playwriter serve` instance** via message queuing in the relay. Playwriter serve manages the Chrome extension and creates isolated browser pages per MCP client. This minimizes resource usage while providing complete isolation through the MCP protocol.
 
@@ -15,18 +15,18 @@
 - **Server mode** (`startServer(token, playwrightHost)`):
   - Starts `playwriter serve` (manages Chrome extension and isolated pages)
   - Creates DHT server listening on deterministic key (derived from token)
-  - Authenticates clients via token verification
+  - Authenticates clients via DHT public key verification
   - Forwards authenticated clients to shared playwriter serve via message queuing
 
-- **Client mode** (`connectClient(publicKey, token)`):
+- **Client mode** (`connectClient(publicKey)`):
   - Connects to relay server via hyperswarm DHT
-  - Sends authentication token
+  - DHT public key authentication (no separate token verification needed)
   - Bridges stdio ↔ socket for transparent MCP communication
 
 **2. CLI Interface (`lib/cli.js`)**
 - Yargs-based command-line interface
 - `serve` command: starts relay server (auto-generates token if not provided)
-- Client mode: connects to existing relay (requires `--host` and `--token`)
+- Client mode: connects to existing relay (requires `--host` only)
 
 **3. Entry Point (`bin/cli.js`)**
 - Executable entry point
@@ -39,7 +39,7 @@
 │ Server Side (Single Machine)                                       │
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│  playwriter-nat-relay serve --token secret123                    │
+│  playwriter-nat serve --token secret123                    │
 │           │                                                       │
 │           ├─ Spawns: playwriter serve --token secret123          │
 │           │           (manages Chrome extension + isolated pages) │
@@ -73,7 +73,7 @@
 ## File Structure
 
 ```
-playwriter-nat-relay/
+playwriter-nat/
 ├── bin/
 │   └── cli.js              # CLI entry point (executable, 22 lines)
 ├── lib/
@@ -89,24 +89,20 @@ playwriter-nat-relay/
 ### Start Relay Server
 
 ```bash
-# Auto-generate random token
-npm start
-# or
-npx playwriter-nat-relay serve
+# Using gxe (recommended)
+npx -y gxe@latest AnEntrypoint/playwriter-nat serve
 
-# Use custom token
-npx playwriter-nat-relay serve --token mysecret123
+# Or locally (if installed)
+npm start
 ```
 
 Output:
 ```
-Generated token: a1b2c3d4e5f6g7h8
 Relay server started
 Public key: 1234567890abcdef...
-Token: a1b2c3d4e5f6g7h8
 
 Connect with:
-  npx playwriter-nat-relay --host 1234567890abcdef... --token a1b2c3d4e5f6g7h8
+  npx -y gxe@latest AnEntrypoint/playwriter-nat --host 1234567890abcdef...
 ```
 
 ### Connect Client
@@ -114,9 +110,7 @@ Connect with:
 From a remote machine with network access to the relay server:
 
 ```bash
-npx playwriter-nat-relay \
-  --host 1234567890abcdef... \
-  --token a1b2c3d4e5f6g7h8
+npx -y gxe@latest AnEntrypoint/playwriter-nat --host 1234567890abcdef...
 ```
 
 This connects to the relay and bridges playwriter MCP via the P2P socket.
@@ -139,10 +133,9 @@ This allows clients to derive the server's public key without additional setup.
 ### Authentication
 
 1. Client connects to server's public key via hyperswarm
-2. Client sends token (first message)
-3. Server verifies token matches
-4. If valid: forwards client to shared playwriter serve
-5. If invalid: closes socket
+2. DHT public key derivation from token proves authentication
+3. No separate token verification needed - connection to the public key IS authentication
+4. Server forwards client to shared playwriter serve
 
 ### Isolation & Message Queuing
 
@@ -208,22 +201,16 @@ No test files are committed (per user preference to use glootie for everything).
 
 ### Production Setup
 
-1. Install globally or via npx:
+1. Start relay server using gxe:
    ```bash
-   npm install -g playwriter-nat-relay
-   # or use npx (no install needed)
+   npx -y gxe@latest AnEntrypoint/playwriter-nat serve
    ```
 
-2. Start relay server with persistent token:
-   ```bash
-   nohup npx playwriter-nat-relay serve --token mysecrettoken &
-   ```
+2. Share connection details with clients (public key only)
 
-3. Share connection details with clients (public key + token)
-
-4. Clients connect:
+3. Clients connect using gxe:
    ```bash
-   npx playwriter-nat-relay --host <public-key> --token mysecrettoken
+   npx -y gxe@latest AnEntrypoint/playwriter-nat --host <public-key>
    ```
 
 ### Network Requirements
@@ -234,21 +221,21 @@ No test files are committed (per user preference to use glootie for everything).
 
 ### Security Considerations
 
-1. **Token**: Use strong random token (auto-generated is 32-char hex)
+1. **DHT Key**: Derived from token (not transmitted), proves knowledge of server's seed
 2. **Network**: Runs over hyperswarm (encrypted by default)
 3. **Isolation**: Enforced by playwriter serve per-page contexts and MCP protocol message IDs
-4. **No Auth**: Beyond token (which is sent on first connection)
+4. **Authentication**: Via DHT public key (no separate token verification needed)
 
 ## Codebase Quality
 
 **Lines of Code:**
 - bin/cli.js: 22 lines
-- lib/cli.js: 117 lines
-- lib/relay.js: 238 lines
-- package.json: 30 lines
-- README.md: 160 lines
-- CLAUDE.md: this file
-- **Total: 567 lines (all production code, zero test files)**
+- lib/cli.js: 106 lines
+- lib/relay.js: 292 lines
+- package.json: 31 lines
+- README.md: 51 lines
+- CLAUDE.md: 284 lines
+- **Total: 786 lines (all production code, zero test files)**
 
 **Constraints Enforced:**
 - Max ~240 lines per file (relay.js is core class handling message queuing)

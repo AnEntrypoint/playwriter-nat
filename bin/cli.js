@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * CLI entry point for playwriter-nat-relay
+ * CLI entry point for playwriter-nat
  * Handles command-line execution only.
  */
 

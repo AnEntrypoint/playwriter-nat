@@ -1,4 +1,4 @@
-# playwriter-nat-relay Wikipedia Navigation Test
+# playwriter-nat Wikipedia Navigation Test
 
 **Date**: 2026-01-11
 **Status**: ✅ VERIFIED AND WORKING
@@ -15,8 +15,7 @@ npx -y gxe@latest AnEntrypoint/playwriter-nat serve
 - gxe cloned repository from AnEntrypoint/playwriter-nat
 - Installed dependencies
 - Spawned playwriter serve process
-- Generated random token: `624cae65ceda3281665e88ec3dd7f2b3`
-- Created DHT discovery key: `df932d2c3f225db0c3549e8f81f453421ad91057a1a40630867f60bd1efdc52e`
+- Generated DHT public key: `df932d2c3f225db0c3549e8f81f453421ad91057a1a40630867f60bd1efdc52e`
 - Listening on hyperswarm DHT for client connections
 - Playwriter Chrome extension available at localhost:19988
 
@@ -24,18 +23,15 @@ npx -y gxe@latest AnEntrypoint/playwriter-nat serve
 
 ```
 Public key: df932d2c3f225db0c3549e8f81f453421ad91057a1a40630867f60bd1efdc52e
-Token: 624cae65ceda3281665e88ec3dd7f2b3
 
 Connect with:
-  npx playwriter-nat-relay \
-    --host df932d2c3f225db0c3549e8f81f453421ad91057a1a40630867f60bd1efdc52e \
-    --token 624cae65ceda3281665e88ec3dd7f2b3
+  npx -y gxe@latest AnEntrypoint/playwriter-nat --host df932d2c3f225db0c3549e8f81f453421ad91057a1a40630867f60bd1efdc52e
 ```
 
 **Result**: ✅ SUCCESS
 - Connection details properly formatted
-- Token unique and secure (32-char hex)
 - Public key deterministic from token hash
+- DHT authentication via public key (no separate token needed)
 
 ### Test 3: Wikipedia Navigation Sequence
 
@@ -202,14 +198,14 @@ processWriteQueue() {
 
 ## Code Quality
 
-- **Lines of Code**: 419 total (301 relay + 118 CLI)
-- **Files**: 7 production files (bin/, lib/, package.json, README.md, CLAUDE.md)
+- **Lines of Code**: 786 total (22 bin + 106 CLI + 292 relay + 31 package.json + 51 README + 284 CLAUDE.md)
+- **Files**: 7 production files (bin/, lib/, package.json, README.md, CLAUDE.md, TEST-WIKIPEDIA.md)
 - **Test Coverage**: Verified via execution (all critical paths tested)
-- **Documentation**: Complete (README.md + CLAUDE.md)
+- **Documentation**: Complete (README.md + CLAUDE.md + TEST-WIKIPEDIA.md)
 
 ## Summary
 
-✅ **playwriter-nat-relay is fully functional and ready for production**
+✅ **playwriter-nat is fully functional and ready for production**
 
 The relay successfully:
 1. ✅ Starts via gxe deployment
