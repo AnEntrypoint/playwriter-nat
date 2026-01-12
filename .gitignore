@@ -2,3 +2,7 @@ tmp/
 node_modules/
 package-lock.json
 .code-search/
+*.db
+.DS_Store
+.env
+.env.local
