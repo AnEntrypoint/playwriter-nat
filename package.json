@@ -7,8 +7,7 @@
     "playwriter-nat": "./bin/cli.js"
   },
   "scripts": {
-    "start": "node bin/cli.js serve",
-    "serve": "node bin/cli.js serve"
+    "start": "node bin/cli.js"
   },
   "keywords": [
     "playwriter",
