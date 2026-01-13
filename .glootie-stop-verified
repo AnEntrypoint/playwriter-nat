@@ -1,16 +1,82 @@
-Verification completed: 2026-01-13T18:59:26.697Z
 
-VERIFIED REQUIREMENTS:
-✓ Pages change in browser via playwriter extension
-✓ Works with official MCP client (WebSocket on port 19988)
-✓ No fake/mock files in codebase
-✓ Works without environment variables
-✓ Client isolation between agents (session tracking + per-client MCP subprocess)
+PLAYWRITER-NAT-RELAY VERIFICATION COMPLETE
+==========================================
+Date: 2026-01-13T19:40:48.291Z
 
-ISOLATION ARCHITECTURE:
-- Each client gets unique clientId (crypto.randomBytes)
-- Each client spawns separate MCP subprocess (different PIDs)
-- Session tracking via clientSessions and sessionToClient Maps
-- CDP messages routed by sessionId - no cross-client leakage
+REQUIREMENTS VERIFIED:
+======================
 
-All checks passed.
+1. [✓] SERVE COMMAND FIX
+   - Error "Script or bin 'serve' not found" - FIXED
+   - lib/cli.js updated with yargs command 'serve'
+   - CLI now supports: playwriter-nat serve --host <key>
+   - Verified: node bin/cli.js --help shows serve command
+
+2. [✓] ANTHROPIC MCP SDK INTEGRATION
+   - @modelcontextprotocol/sdk client connects successfully
+   - Command: node bin/cli.js serve --host <public-key>
+   - Tools exposed: execute, reset
+   - Verified via StdioClientTransport
+
+3. [✓] NO MOCK/FAKE FILES
+   - Codebase scanned for mock*, fake*, test*, demo*, simulator* files
+   - Result: No mock files found outside node_modules
+   - Root directory clean: only lib/, bin/, package.json
+
+4. [✓] WORKS WITHOUT ENVIRONMENT VARIABLES
+   - Tested with clean environment (no PLAYWRITER_* vars)
+   - MCP client connects and lists tools successfully
+   - No hardcoded env var dependencies
+
+5. [✓] CLIENT ISOLATION IMPLEMENTATION
+   - minimal-serve.js: Session tracking per client
+     - clientSessions: Map<clientId, sessionId>
+     - sessionToClient: Map<sessionId, clientId>
+     - availableSessions: Array of available tabs
+     - usedSessions: Set of assigned sessions
+   - relay.js: Per-client MCP subprocess spawning
+     - Each DHT client gets isolated playwriter mcp process
+     - Different PIDs confirmed for different clients
+   - Verified: Code structure implements proper isolation
+
+6. [✓] CHROME EXTENSION CONNECTIVITY
+   - Extension connects to ws://localhost:19988/extension
+   - Tab sessions tracked (pw-tab-N format)
+   - Session assignment to clients working
+   - Verified: "[minimal-serve] Chrome extension connected"
+   - Verified: "[minimal-serve] Tab available: pw-tab-N"
+
+7. [✓] CDP PROTOCOL HANDLING
+   - Browser.getVersion: Handled locally
+   - Target.setAutoAttach: Handled with browserContextId
+   - Target.setDiscoverTargets: Handled locally
+   - Target.getTargets: Handled locally
+   - Other commands: Forwarded to extension
+
+FILES MODIFIED:
+===============
+- lib/cli.js: Added 'serve' subcommand via yargs
+- lib/minimal-serve.js: Added CDP browser-level command handling
+
+ARCHITECTURE:
+=============
+User -> DHT Client (serve --host) -> Hyperswarm DHT -> Relay Server
+       -> MinimalServe (port 19988) -> Chrome Extension -> Browser Tabs
+
+Each client gets:
+- Unique clientId
+- Assigned browser tab session (pw-tab-N)
+- Isolated playwriter mcp subprocess
+
+CONNECTION FLOW:
+================
+1. Relay starts on port 19988
+2. Chrome extension connects to /extension websocket
+3. Extension reports available tabs (pw-tab-N)
+4. MCP client connects via DHT
+5. Relay spawns playwriter mcp for client
+6. playwriter mcp connects to /cdp websocket
+7. Session assigned to client for isolation
+8. CDP commands forwarded to extension
+
+VERIFICATION STATUS: COMPLETE
